@@ -1,0 +1,6 @@
+options:
+  settings_yaml:
+    type: string
+    default: ''
+    description: |
+      Defines the settings provided to the webhook as a YAML string, as described [here](https://github.com/idgenchev/namespace-node-affinity#configuration) with example [here](https://github.com/idgenchev/namespace-node-affinity/blob/main/examples/sample_configmap.yaml).

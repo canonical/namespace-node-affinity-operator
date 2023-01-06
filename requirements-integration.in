@@ -1,0 +1,2 @@
+pytest-operator
+-r requirements.txt
