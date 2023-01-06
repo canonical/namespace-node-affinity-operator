@@ -79,8 +79,8 @@ class NamespaceNodeAffinityOperator(CharmBase):
             self.logger.error("K8S resource creation failed with ApiError:")
             self.logger.error(str(ApiError))
             self.logger.error(ApiError.status)
+            raise ErrorWithStatus("K8S resources creation failed", BlockedStatus)
 
-        raise ErrorWithStatus("K8S resources creation failed", BlockedStatus)
         self.model.unit.status = MaintenanceStatus("K8S resources created")
 
     def _gen_certs_if_missing(self):
