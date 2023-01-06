@@ -1,0 +1,4 @@
+name: namespace-node-affinity
+summary: A tool for adding Node Affinities and Tolerations to all pods in specific Kubernetes namespaces.
+description: |
+  A tool for adding Node Affinities and Tolerations to all pods in specific Kubernetes namespaces.
