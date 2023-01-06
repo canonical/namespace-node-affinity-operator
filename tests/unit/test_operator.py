@@ -88,13 +88,15 @@ class TestCharm:
         # Patch charm.KubernetesResourceHandler so that it does not create a real lightkube client
         # Patch charm.load_in_cluster_generic_resources so we can check it was called without
         # actually using a client
-        KRH_mocker = mocker.patch("charm.KubernetesResourceHandler")
-        KRH_mocker.return_value = MockedKRH()
-        mocked_load_in_cluster_generic_resources = mocker.patch("charm.load_in_cluster_generic_resources")
+        krh_mocker = mocker.patch("charm.KubernetesResourceHandler")
+        krh_mocker.return_value = MockedKRH()
+        mocked_load_in_cluster_generic_resources = mocker.patch(
+            "charm.load_in_cluster_generic_resources"
+        )
 
         # Use the resource handler a first time and confirm it was created successfully
         krh = harness.charm.k8s_resource_handler
-        KRH_mocker.assert_called_once_with(
+        krh_mocker.assert_called_once_with(
             field_manager=field_manager,
             template_files=k8s_resource_files,
             context=context,
@@ -104,7 +106,7 @@ class TestCharm:
 
         # Confirm when we use it again, we get the cached version
         krh2 = harness.charm.k8s_resource_handler
-        assert KRH_mocker.call_count == 1
+        assert krh_mocker.call_count == 1
         assert krh is krh2
 
     @pytest.mark.parametrize(
@@ -185,5 +187,5 @@ class MockedKRH:
     """Mocked KubernetesResourceHandler."""
 
     def __init__(self, *args, **kwargs):
-        """Mocked init."""
+        """Mock KubernetesResourceHandler."""
         self.lightkube_client = "lightkube_client"
