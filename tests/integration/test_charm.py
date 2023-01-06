@@ -14,7 +14,7 @@ from lightkube import Client
 from lightkube.core.exceptions import ApiError
 from lightkube.models.core_v1 import Container, ContainerPort, PodSpec
 from lightkube.models.meta_v1 import ObjectMeta
-from lightkube.resources.core_v1 import Pod
+from lightkube.resources.core_v1 import Pod, Namespace
 from pytest_operator.plugin import OpsTest
 
 logger = logging.getLogger(__name__)
@@ -97,24 +97,36 @@ def temp_pod_deleter():
             pass
 
 
-async def set_application_config(application, config: dict, wait_time=10):
+async def set_application_config(ops_test: OpsTest, app_name: str, config: dict, waittime=10):
     """Update the config of an application and wait for the settings to take effect.
 
     It would be nice if there was a cleaner way to ensure these settings are propagated, instead of
-    just waiting and hoping we've waited long enough.
+    just waiting N seconds before checking for idle, but without the wait we usually pass through
+    too quickly.  Using just `wait_for_idle` doesn't work here because the charm is idle already,
+    so usually we pass `wait_for_idle` before the charm has a chance to wake up and do the config
+    change.
     """
+    application = ops_test.model.applications[APP_NAME]
     await application.set_config(config)
-    sleep(wait_time)
+    sleep(waittime)
+    await ops_test.model.wait_for_idle(
+        apps=[APP_NAME], status="active", raise_on_blocked=True, timeout=60
+    )
 
 
 async def test_webhook_workload(ops_test: OpsTest, temp_pod_deleter):
     """Test whether the webhook properly adds a node affinity to new pods."""
     lightkube_client = Client()
 
+    # Enable the namespace node affinity tool in this model's namespace
+    patch = {'metadata': {'labels': {'namespace-node-affinity': 'enabled'}}}
+    lightkube_client.patch(Namespace, ops_test.model_name, patch)
+
     # Create a pod in this namespace and ensure it comes up without any node affinity
     # Configure webhook to not apply to any namespaces
     await set_application_config(
-        application=ops_test.model.applications[APP_NAME],
+        ops_test=ops_test,
+        app_name=APP_NAME,
         config={"settings_yaml": ""},
     )
     test_pod_name = "test-pod-no-affinity"
@@ -128,7 +140,8 @@ async def test_webhook_workload(ops_test: OpsTest, temp_pod_deleter):
     # Update config to add a node affinity to pods in this namespace
     settings_yaml = SETTINGS_YAML_TEMPLATE.format(namespace=ops_test.model.name)
     await set_application_config(
-        application=ops_test.model.applications[APP_NAME],
+        ops_test=ops_test,
+        app_name=APP_NAME,
         config={"settings_yaml": settings_yaml},
     )
 
