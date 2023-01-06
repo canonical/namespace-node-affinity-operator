@@ -14,7 +14,7 @@ from lightkube import Client
 from lightkube.core.exceptions import ApiError
 from lightkube.models.core_v1 import Container, ContainerPort, PodSpec
 from lightkube.models.meta_v1 import ObjectMeta
-from lightkube.resources.core_v1 import Pod, Namespace
+from lightkube.resources.core_v1 import Namespace, Pod
 from pytest_operator.plugin import OpsTest
 
 logger = logging.getLogger(__name__)
@@ -119,7 +119,7 @@ async def test_webhook_workload(ops_test: OpsTest, temp_pod_deleter):
     lightkube_client = Client()
 
     # Enable the namespace node affinity tool in this model's namespace
-    patch = {'metadata': {'labels': {'namespace-node-affinity': 'enabled'}}}
+    patch = {"metadata": {"labels": {"namespace-node-affinity": "enabled"}}}
     lightkube_client.patch(Namespace, ops_test.model_name, patch)
 
     # Create a pod in this namespace and ensure it comes up without any node affinity
