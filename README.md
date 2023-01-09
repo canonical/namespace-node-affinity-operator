@@ -2,7 +2,7 @@
 
 This Charm deploys a modified version of the [Namespace Node Affinity](https://github.com/idgenchev/namespace-node-affinity) Kubernetes MutatingWebhook. 
 
-The Namespace Node Affinity webhook allows a user to add a given set of node affinities and/or tolerations to all pods deployed in a namespace.  This is useful for example in a case where you have a cluster that has some nodes with specific labels (eg: nodes labeled `control-plane`) and you want all workloads in a Kubernetes namespace to be deployed only on those nodes and not any others in the cluster.  More descriptions of the tool are given in the [upstream README.md]([Namespace Node Affinity](https://github.com/idgenchev/namespace-node-affinity).
+The Namespace Node Affinity webhook allows a user to add a given set of node affinities and/or tolerations to all pods deployed in a namespace.  This is useful for example in a case where you have a cluster that has some nodes with specific labels (eg: nodes labeled `control-plane`) and you want all workloads in a Kubernetes namespace to be deployed only on those nodes and not any others in the cluster.  More descriptions of the tool are given in the [upstream README.md](https://github.com/idgenchev/namespace-node-affinity).
 
 ## Usage
 
