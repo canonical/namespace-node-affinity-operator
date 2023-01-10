@@ -1,0 +1,147 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: {{ app_name }}-pod-webhook
+  namespace: {{ namespace }}
+  labels:
+    app: {{ app_name }}-pod-webhook
+webhooks:
+  - name: {{ app_name }}-pod-webhook.default.svc
+    clientConfig:
+      caBundle: {{ ca_bundle }}
+      service:
+        name: {{ app_name }}-pod-webhook
+        namespace: {{ namespace }}
+        path: "/mutate"
+        port: 443
+    objectSelector:
+      matchExpressions:
+      - key: app
+        operator: NotIn
+        values:
+        - {{ app_name }}-pod-webhook
+    rules:
+      - operations: ["CREATE"]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+    admissionReviewVersions: ["v1"]
+    sideEffects: None
+    timeoutSeconds: 5
+    reinvocationPolicy: Never
+    failurePolicy: Ignore
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ app_name }}-pod-webhook
+  namespace: {{ namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ app_name }}-pod-webhook
+  template:
+    metadata:
+      name: {{ app_name }}-pod-webhook
+      labels:
+        app: {{ app_name }}-pod-webhook
+    spec:
+      containers:
+      - name: mutator
+        image: {{ image }}
+        ports:
+          - containerPort: 8443
+            protocol: TCP
+        volumeMounts:
+          - mountPath: /etc/webhook/certs
+            name: webhook-certs
+            readOnly: true
+        resources:
+          limits:
+            cpu: 500m
+            memory: 128Mi
+          requests:
+            cpu: 250m
+            memory: 64Mi
+        env:
+          - name: CERT
+            value: /etc/webhook/certs/tls.crt
+          - name: KEY
+            value: /etc/webhook/certs/tls.key
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: CONFIG_MAP_NAME
+            value: {{ app_name }}
+      serviceAccountName: {{ app_name }}-pod-webhook
+      volumes:
+        - name: webhook-certs
+          secret:
+            secretName: {{ app_name }}-webhook-certs
+            items:
+            - key: cert
+              path: tls.crt
+            - key: key
+              path: tls.key
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ app_name }}-pod-webhook
+  namespace: {{ namespace }}
+spec:
+  publishNotReadyAddresses: true
+  ports:
+    - port: 443
+      targetPort: 8443
+  selector:
+    app: {{ app_name }}-pod-webhook
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ app_name }}-webhook-certs
+type: Opaque
+data:
+  cert: {{ cert }}
+  key: {{ cert_key }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ app_name }}
+data:
+  {{ configmap_settings | indent(2) }}
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ app_name }}-pod-webhook
+  namespace: {{ namespace }}
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ app_name }}-pod-webhook
+  namespace: {{ namespace }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ app_name }}-pod-webhook
+    namespace: {{ namespace }}
+    apiGroup: ""
+roleRef:
+  kind: Role
+  name: {{ app_name }}-pod-webhook
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ app_name }}-pod-webhook
+  namespace: {{ namespace }}
