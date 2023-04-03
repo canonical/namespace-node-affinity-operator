@@ -21,7 +21,7 @@ from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingSta
 from certs import gen_certs
 
 K8S_RESOURCE_FILES = ["src/templates/webhook_resources.yaml"]
-TAGGED_IMAGE = "charmedkubeflow/namespace-node-affinity:v2.2.0"
+TAGGED_IMAGE = "charmedkubeflow/namespace-node-affinity:2.2.0"
 
 
 class NamespaceNodeAffinityOperator(CharmBase):
