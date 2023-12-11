@@ -10,16 +10,16 @@ click==8.1.6
     # via
     #   -r requirements-fmt.txt
     #   black
-codespell==2.2.5
+codespell==2.2.6
     # via -r requirements-lint.in
-flake8==6.0.0
+flake8==6.1.0
     # via
     #   -r requirements-lint.in
     #   flake8-builtins
     #   flake8-docstrings
     #   pep8-naming
     #   pyproject-flake8
-flake8-builtins==2.1.0
+flake8-builtins==2.2.0
     # via -r requirements-lint.in
 flake8-copyright==0.2.4
     # via -r requirements-lint.in
@@ -47,13 +47,13 @@ platformdirs==3.10.0
     # via
     #   -r requirements-fmt.txt
     #   black
-pycodestyle==2.10.0
+pycodestyle==2.11.1
     # via flake8
 pydocstyle==6.3.0
     # via flake8-docstrings
-pyflakes==3.0.1
+pyflakes==3.1.0
     # via flake8
-pyproject-flake8==6.0.0.post1
+pyproject-flake8==6.1.0
     # via -r requirements-lint.in
 snowballstemmer==2.2.0
     # via pydocstyle
