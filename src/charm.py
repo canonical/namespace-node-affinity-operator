@@ -10,13 +10,20 @@ from base64 import b64encode
 
 import yaml
 from charmed_kubeflow_chisme.exceptions import ErrorWithStatus
-from charmed_kubeflow_chisme.kubernetes import KubernetesResourceHandler
+from charmed_kubeflow_chisme.kubernetes import (
+    KubernetesResourceHandler,
+    create_charm_default_labels,
+)
 from lightkube import ApiError
 from lightkube.generic_resource import load_in_cluster_generic_resources
+from lightkube.resources.admissionregistration_v1 import MutatingWebhookConfiguration
+from lightkube.resources.apps_v1 import Deployment
+from lightkube.resources.core_v1 import ConfigMap, Secret, Service, ServiceAccount
+from lightkube.resources.rbac_authorization_v1 import Role, RoleBinding
 from ops.charm import CharmBase
 from ops.framework import StoredState
 from ops.main import main
-from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
+from ops.model import ActiveStatus, BlockedStatus, ErrorStatus, MaintenanceStatus, WaitingStatus
 
 from certs import gen_certs
 
@@ -49,6 +56,7 @@ class NamespaceNodeAffinityOperator(CharmBase):
         self.framework.observe(self.on.leader_elected, self.main)
         self.framework.observe(self.on.remove, self.main)
         self.framework.observe(self.on.upgrade_charm, self.main)
+        self.framework.observe(self.on.remove, self._on_remove)
 
     def main(self, _):
         """Entrypoint for most charm events."""
@@ -110,6 +118,21 @@ class NamespaceNodeAffinityOperator(CharmBase):
                 template_files=K8S_RESOURCE_FILES,
                 context=self._context,
                 logger=self.logger,
+                labels=create_charm_default_labels(
+                    self.app.name,
+                    self.model.name,
+                    scope="auths-deploy-configmaps-sa-secrets-svc-webhooks",
+                ),
+                resource_types={
+                    MutatingWebhookConfiguration,
+                    Deployment,
+                    Role,
+                    RoleBinding,
+                    Service,
+                    ServiceAccount,
+                    Secret,
+                    ConfigMap,
+                },
             )
         load_in_cluster_generic_resources(self._k8s_resource_handler.lightkube_client)
         return self._k8s_resource_handler
@@ -151,9 +174,19 @@ class NamespaceNodeAffinityOperator(CharmBase):
     def _cert_ca(self):
         return self._stored.ca
 
-    # todo: add a remove handler?
-    # def _on_remove(self, event):
-    #     raise NotImplementedError
+    def _on_remove(self, event):
+        """Remove K8S resources."""
+        self.logger.info("Removing k8s resources")
+        try:
+            self.unit.status = MaintenanceStatus("Removing k8s resources")
+            self.k8s_resource_handler.delete()
+        except ApiError:
+            self.logger.error("K8s resource removal failed with ApiError:")
+            self.logger.error(str(ApiError))
+            self.logger.error(ApiError.status)
+            self.model.unit.status = ErrorStatus("K8S resources removal failed")
+
+        self.model.unit.status = MaintenanceStatus("K8s resources removed")
 
 
 if __name__ == "__main__":
