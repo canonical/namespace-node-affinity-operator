@@ -8,6 +8,8 @@ anyio==3.7.1
     # via
     #   -r requirements.txt
     #   httpcore
+appnope==0.1.4
+    # via ipython
 asttokens==2.4.0
     # via stack-data
 attrs==23.1.0
@@ -125,7 +127,7 @@ oauthlib==3.2.2
     # via
     #   kubernetes
     #   requests-oauthlib
-ops==2.5.0
+ops==2.14.0
     # via
     #   -r requirements.txt
     #   charmed-kubeflow-chisme
