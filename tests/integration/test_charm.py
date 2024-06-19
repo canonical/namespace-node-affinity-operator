@@ -157,15 +157,12 @@ async def test_webhook_workload(ops_test: OpsTest, temp_pod_deleter):
 async def test_charm_removal(ops_test: OpsTest):
     """Test that the  charm can be removed without errors and leaves no leftovers."""
     await ops_test.model.remove_application(APP_NAME, block_until_done=True)
-    deleted = True
     lightkube_client = Client()
     pods = lightkube_client.list(
         Pod, namespace=ops_test.model.name, labels={"app": "namespace-node-affinity-pod-webhook"}
     )
-    for pod in pods:
-        # if there is a pod in the list, then the pod hasn't been deleted
-        deleted = False
-    assert deleted, (
+    pods_list = list(pods)
+    assert len(pods_list) == 0, (
         "Workload pod with label 'app': 'namespace-node-affinity-pod-webhook'"
         "still present on the cluster."
     )
