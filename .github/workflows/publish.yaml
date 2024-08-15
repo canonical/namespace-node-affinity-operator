@@ -58,7 +58,7 @@ jobs:
           ref: ${{ inputs.source_branch }}
 
       - name: Select charmhub channel
-        uses: canonical/charming-actions/channel@2.1.1
+        uses: canonical/charming-actions/channel@2.3.0
         id: select-channel
         if: ${{ inputs.destination_channel == '' }}
 
@@ -84,10 +84,11 @@ jobs:
           echo "::set-output name=tag_prefix::$tag_prefix"
 
       - name: Upload charm to charmhub
-        uses: canonical/charming-actions/upload-charm@2.1.1
+        uses: canonical/charming-actions/upload-charm@2.6.2
         with:
           credentials: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           charm-path: ${{ matrix.charm-path }}
           channel: ${{ steps.parse-inputs.outputs.destination_channel }}
           tag-prefix: ${{ steps.parse-inputs.outputs.tag_prefix }}
+          charmcraft-channel: latest/candidate
