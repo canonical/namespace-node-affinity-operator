@@ -56,6 +56,7 @@ jobs:
     uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v21.0.0
     with:
       cache: true
+      charmcraft-snap-channel: latest/edge
 
   integration-tests:
     name: Integration Test
