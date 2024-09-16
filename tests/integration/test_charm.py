@@ -5,11 +5,11 @@
 """Integration tests for Namespace Node Affinity Operator/Charm."""
 
 import logging
+import os
 from pathlib import Path
 from time import sleep
 
 import pytest
-import os
 import yaml
 from lightkube import Client
 from lightkube.core.exceptions import ApiError
@@ -40,14 +40,17 @@ SETTINGS_YAML_TEMPLATE = """
           - the-testing-val2
         """
 
+
 @pytest.fixture
 def use_packed_charms() -> str:
-    return os.environ.get("USE_PACKED_CHARMS", "false").replace("\"", "")
+    """Return environment variable `USE_PACKED_CHARMS`. If it's not found, return `false`."""
+    return os.environ.get("USE_PACKED_CHARMS", "false").replace('"', "")
+
 
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy(ops_test: OpsTest, use_packed_charms):
     """Build and deploy the charm, asserting on the unit status."""
-    charm_path="."
+    charm_path = "."
     if use_packed_charms.lower() == "true":
         charm_under_test = await get_packed_charms(charm_path)
     else:

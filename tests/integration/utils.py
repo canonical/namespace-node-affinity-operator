@@ -1,16 +1,17 @@
+# Copyright 2024 Canonical Ltd.
+# See LICENSE file for licensing details.
+"""Utils functions for integration tests. Should be moved to chisme."""
+
 import os
 import pathlib
 import subprocess
 import typing
 
-import yaml
 
 async def get_packed_charms(
     charm_path: typing.Union[str, os.PathLike], bases_index: int = None
 ) -> pathlib.Path:
-    """
-    Simplified version of https://github.com/canonical/data-platform-workflows/blob/06f252ea079edfd055cee236ede28c237467f9b0/python/pytest_plugins/pytest_operator_cache/pytest_operator_cache/_plugin.py#L22
-    """
+    """Simplified version of https://github.com/canonical/data-platform-workflows/blob/06f252ea079edfd055cee236ede28c237467f9b0/python/pytest_plugins/pytest_operator_cache/pytest_operator_cache/_plugin.py#L22."""  # noqa: E501
     charm_path = pathlib.Path(charm_path)
     # namespace-node-affinity_ubuntu-20.04-amd64.charm
     # <metadata-name>_<base>-<architecture>.charm
@@ -32,7 +33,7 @@ async def get_packed_charms(
         # `pathlib.Path`.)
         return packed_charms[0].resolve(strict=True)
     elif len(packed_charms) > 1:
-        message = f"More than one matching .charm file found at {charm_path=} for {architecture=}: {packed_charms}."
+        message = f"More than one matching .charm file found at {charm_path=} for {architecture=}: {packed_charms}."  # noqa: E501
         if bases_index is None:
             message += " Specify `bases_index`"
         raise ValueError(message)
