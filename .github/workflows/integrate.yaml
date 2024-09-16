@@ -3,9 +3,18 @@ name: CI
 
 on:
   workflow_call:
+    inputs:
+      build-using-cache:
+        description: Boolean that defines if charms are built using cache.
+        type: boolean
+        required: true
     secrets:
       charmcraft-credentials:
         required: true
+    outputs:
+      artifact-prefix:
+        description: "Charm packages are uploaded to GitHub artifacts beginning with this prefix."
+        value:  ${{ jobs.build.outputs.artifact-prefix }}
 
 jobs:
 
@@ -55,7 +64,7 @@ jobs:
     name: Build charm
     uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v21.0.0
     with:
-      cache: true
+      cache: ${{ inputs.build-using-cache }}
       charmcraft-snap-channel: 2.x/edge
 
   integration-tests:

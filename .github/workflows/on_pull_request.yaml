@@ -14,10 +14,15 @@ jobs:
     uses: ./.github/workflows/integrate.yaml
     secrets:
       charmcraft-credentials: "${{ secrets.CHARMCRAFT_CREDENTIALS }}"
+    with:
+      build-using-cache: true
 
   # publish runs in parallel with tests, as we always publish in this situation
   publish-charm:
     name: Publish Charm
+    needs: tests
     uses: ./.github/workflows/publish.yaml
     secrets:
       CHARMCRAFT_CREDENTIALS: "${{ secrets.CHARMCRAFT_CREDENTIALS }}"
+    with:
+      artifact-prefix: ${{ needs.tests.outputs.artifact-prefix }}
