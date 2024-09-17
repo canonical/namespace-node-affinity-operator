@@ -3,11 +3,6 @@ name: CI
 
 on:
   workflow_call:
-    inputs:
-      build-using-cache:
-        description: Boolean that defines if charms are built using cache.
-        type: boolean
-        required: true
     secrets:
       charmcraft-credentials:
         required: true
@@ -64,7 +59,7 @@ jobs:
     name: Build charm
     uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v21.0.0
     with:
-      cache: ${{ inputs.build-using-cache }}
+      cache: ${{ github.event_name == 'pull_request' }}
       charmcraft-snap-channel: 2.x/edge
 
   integration-tests:

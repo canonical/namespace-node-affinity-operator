@@ -21,8 +21,6 @@ jobs:
     uses: ./.github/workflows/integrate.yaml
     secrets:
       charmcraft-credentials: "${{ secrets.CHARMCRAFT_CREDENTIALS }}"
-    with:
-      build-using-cache: false
 
   # publish runs in series with tests, and only publishes if tests passes
   publish-charm:
