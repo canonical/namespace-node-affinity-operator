@@ -105,6 +105,7 @@ jobs:
     with:
       channel: ${{ needs.define-channel.outputs.destination-channel }}
       artifact-prefix: ${{ inputs.artifact-prefix }}
+      create-github-release: ${{ github.event_name == 'push' }}
     secrets:
       charmhub-token: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
     permissions:
