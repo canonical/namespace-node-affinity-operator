@@ -5,6 +5,7 @@
 """Integration tests for Namespace Node Affinity Operator/Charm."""
 
 import logging
+import os
 from pathlib import Path
 from time import sleep
 
@@ -16,6 +17,7 @@ from lightkube.models.core_v1 import Container, ContainerPort, PodSpec
 from lightkube.models.meta_v1 import ObjectMeta
 from lightkube.resources.core_v1 import Namespace, Pod
 from pytest_operator.plugin import OpsTest
+from utils import get_packed_charms
 
 logger = logging.getLogger(__name__)
 
@@ -39,10 +41,20 @@ SETTINGS_YAML_TEMPLATE = """
         """
 
 
+@pytest.fixture
+def use_packed_charms() -> str:
+    """Return environment variable `USE_PACKED_CHARMS`. If it's not found, return `false`."""
+    return os.environ.get("USE_PACKED_CHARMS", "false").replace('"', "")
+
+
 @pytest.mark.abort_on_fail
-async def test_build_and_deploy(ops_test: OpsTest):
+async def test_build_and_deploy(ops_test: OpsTest, use_packed_charms):
     """Build and deploy the charm, asserting on the unit status."""
-    charm_under_test = await ops_test.build_charm(".")
+    charm_path = "."
+    if use_packed_charms.lower() == "true":
+        charm_under_test = await get_packed_charms(charm_path)
+    else:
+        charm_under_test = await ops_test.build_charm(charm_path)
 
     await ops_test.model.deploy(charm_under_test, application_name=APP_NAME, trust=True)
 

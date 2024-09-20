@@ -6,6 +6,10 @@ on:
     secrets:
       charmcraft-credentials:
         required: true
+    outputs:
+      artifact-prefix:
+        description: "Charm packages are uploaded to GitHub artifacts beginning with this prefix."
+        value:  ${{ jobs.build.outputs.artifact-prefix }}
 
 jobs:
 
@@ -51,12 +55,29 @@ jobs:
       - name: Run unit tests
         run: tox -e unit
 
-  deploy:
+  build:
+    name: Build charm
+    uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v21.0.0
+    with:
+      cache: ${{ github.event_name == 'pull_request' }}
+      charmcraft-snap-channel: 3.x/edge
+
+  integration-tests:
     name: Integration Test
     runs-on: ubuntu-20.04
+    needs: [build]
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+
+      - name: Download packed charm(s)
+        id: download-charms
+        timeout-minutes: 5
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ${{ needs.build.outputs.artifact-prefix }}-*
+          merge-multiple: true
+
       - name: Setup operator environment
         uses: charmed-kubernetes/actions-operator@main
         with:
@@ -67,7 +88,7 @@ jobs:
 
       - name: Run test
         run: |
-          sg snap_microk8s -c "tox -e integration -- --model testing"
+          sg snap_microk8s -c "tox -vve integration-using-packed-charms -- --model testing"
 
       - name: Get all
         run: kubectl get all -A

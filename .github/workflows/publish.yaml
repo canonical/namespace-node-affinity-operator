@@ -9,6 +9,10 @@ on:
         default: ''
         required: false
         type: string
+      artifact-prefix:
+        description: Built charms artifact prefix
+        required: true
+        type: string
     secrets:
       CHARMCRAFT_CREDENTIALS:
         required: true
@@ -41,14 +45,17 @@ jobs:
         run: bash .github/workflows/get-charm-paths.sh
 
 
-  publish-charm:
-    name: Publish Charm
+  define-channel:
+    name: Define destination channel
     runs-on: ubuntu-20.04
     needs: get-charm-paths
     strategy:
       fail-fast: false
       matrix:
         charm-path: ${{ fromJson(needs.get-charm-paths.outputs.charm_paths_list) }}
+    outputs:
+      destination-channel: ${{ steps.parse-inputs.outputs.destination_channel }}
+      tag-prefix: ${{ steps.parse-inputs.outputs.tag_prefix }}
 
     steps:
       - name: Checkout
@@ -83,12 +90,15 @@ jobs:
           echo "setting output of tag_prefix=$tag_prefix"
           echo "::set-output name=tag_prefix::$tag_prefix"
 
-      - name: Upload charm to charmhub
-        uses: canonical/charming-actions/upload-charm@2.6.2
-        with:
-          credentials: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          charm-path: ${{ matrix.charm-path }}
-          channel: ${{ steps.parse-inputs.outputs.destination_channel }}
-          tag-prefix: ${{ steps.parse-inputs.outputs.tag_prefix }}
-          charmcraft-channel: latest/candidate
+  release:
+    name: Release charm
+    uses: canonical/data-platform-workflows/.github/workflows/release_charm.yaml@v21.0.0
+    needs: [define-channel]
+    with:
+      channel: ${{ needs.define-channel.outputs.destination-channel }}
+      artifact-prefix: ${{ inputs.artifact-prefix }}
+      create-github-release: ${{ github.event_name == 'push' }}
+    secrets:
+      charmhub-token: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
+    permissions:
+      contents: write  # Needed to create GitHub release
