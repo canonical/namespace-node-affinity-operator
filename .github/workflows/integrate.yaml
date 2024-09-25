@@ -67,7 +67,7 @@ jobs:
 
       - name: Run test
         run: |
-          sg microk8s -c "tox -e integration -- --model testing"
+          sg snap_microk8s -c "tox -e integration -- --model testing"
 
       - name: Get all
         run: kubectl get all -A
