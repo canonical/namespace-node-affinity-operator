@@ -45,7 +45,7 @@ ops==1.5.4
     #   charmed-kubeflow-chisme
 ordered-set==4.1.0
     # via deepdiff
-pyyaml==6.0
+pyyaml==6.0.2
     # via
     #   lightkube
     #   ops
