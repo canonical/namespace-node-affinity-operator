@@ -21,8 +21,6 @@ from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingSta
 from certs import gen_certs
 
 K8S_RESOURCE_FILES = ["src/templates/webhook_resources.yaml"]
-TAGGED_IMAGE = "charmedkubeflow/namespace-node-affinity:2.2.0"
-
 
 class NamespaceNodeAffinityOperator(CharmBase):
     """A Juju Charm for Namespace Node Affinity."""
@@ -123,7 +121,7 @@ class NamespaceNodeAffinityOperator(CharmBase):
         return {
             "app_name": self._name,
             "namespace": self._namespace,
-            "image": TAGGED_IMAGE,
+            "image": self.config["namespace-node-affinity-image"],
             "ca_bundle": b64encode(self._cert_ca.encode("ascii")).decode("utf-8"),
             "cert": b64encode(self._cert.encode("ascii")).decode("utf-8"),
             "cert_key": b64encode(self._cert_key.encode("ascii")).decode("utf-8"),
