@@ -10,7 +10,7 @@ import yaml
 from ops.model import WaitingStatus
 from ops.testing import Harness
 
-from charm import K8S_RESOURCE_FILES, TAGGED_IMAGE, NamespaceNodeAffinityOperator
+from charm import K8S_RESOURCE_FILES, NamespaceNodeAffinityOperator
 
 # Used for test_get_settings_yaml
 SETTINGS_YAML = """
@@ -48,7 +48,7 @@ class TestCharm:
     def test_context(self, harness: Harness):
         """Test context property."""
         model_name = "test-model"
-        image = TAGGED_IMAGE
+        image = harness.model.config["namespace-node-affinity-image"]
         ca_bundle = "bundle123"
         cert = "cert123"
         cert_key = "cert_key123"
