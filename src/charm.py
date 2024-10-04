@@ -29,6 +29,7 @@ from certs import gen_certs
 
 K8S_RESOURCE_FILES = ["src/templates/webhook_resources.yaml"]
 
+
 class NamespaceNodeAffinityOperator(CharmBase):
     """A Juju Charm for Namespace Node Affinity."""
 
