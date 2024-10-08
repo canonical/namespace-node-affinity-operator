@@ -1,4 +1,9 @@
 options:
+  namespace-node-affinity-image:
+    type: string
+    default: 'charmedkubeflow/namespace-node-affinity:2.2.0'
+    description: |
+      Container image to be used by the namespace-node-affinity workload.
   settings_yaml:
     type: string
     default: ''
