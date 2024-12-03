@@ -68,8 +68,8 @@ jobs:
         with:
           provider: microk8s
           channel: 1.29-strict/stable
-          juju-channel: 3.4/stable
-          charmcraft-channel: latest/candidate
+          juju-channel: 3.6/stable
+          charmcraft-channel: 3.x/stable
 
       - name: Run test
         run: |
