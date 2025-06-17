@@ -13,10 +13,14 @@ from charmed_kubeflow_chisme.exceptions import ErrorWithStatus
 from charmed_kubeflow_chisme.kubernetes import KubernetesResourceHandler
 from lightkube import ApiError
 from lightkube.generic_resource import load_in_cluster_generic_resources
+from lightkube.resources.admissionregistration_v1 import MutatingWebhookConfiguration
+from lightkube.resources.apps_v1 import Deployment
+from lightkube.resources.core_v1 import ConfigMap, Secret, Service, ServiceAccount
+from lightkube.resources.rbac_authorization_v1 import Role, RoleBinding
+from ops import main
 from ops.charm import CharmBase
 from ops.framework import StoredState
-from ops.main import main
-from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
+from ops.model import ActiveStatus, BlockedStatus, ErrorStatus, MaintenanceStatus, WaitingStatus
 
 from certs import gen_certs
 
