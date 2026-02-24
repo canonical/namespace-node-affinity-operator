@@ -14,12 +14,9 @@ webhooks:
         namespace: {{ namespace }}
         path: "/mutate"
         port: 443
-    objectSelector:
-      matchExpressions:
-      - key: app
-        operator: NotIn
-        values:
-        - {{ app_name }}-pod-webhook
+    namespaceSelector:
+      matchLabels:
+        namespace-node-affinity: enabled
     rules:
       - operations: ["CREATE"]
         apiGroups: [""]
