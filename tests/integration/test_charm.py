@@ -129,6 +129,7 @@ async def set_application_config(ops_test: OpsTest, app_name: str, config: dict,
     )
 
 
+@pytest.mark.abort_on_fail
 async def test_webhook_workload(ops_test: OpsTest, temp_pod_deleter):
     """Test whether the webhook properly adds a node affinity to new pods."""
     namespace_1_name = ops_test.model.name
@@ -184,7 +185,6 @@ async def test_webhook_workload(ops_test: OpsTest, temp_pod_deleter):
     assert test_pod_created.spec.affinity is None
 
 
-@pytest.mark.abort_on_fail
 async def test_charm_removal(ops_test: OpsTest):
     """Test that the  charm can be removed without errors and leaves no leftovers."""
     await ops_test.model.remove_application(APP_NAME, block_until_done=True)
