@@ -73,13 +73,13 @@ LABEL_VALUE = "tests-for-namespace-node-affinity"
 TEST_LABEL = {LABEL_KEY: LABEL_VALUE}
 
 
-def create_test_pod_resource(name: str, namespace: str) -> Pod:
+def create_test_pod_resource(name: str) -> Pod:
     """Return a sample Pod resource with the given name."""
     pod = Pod(
         metadata=ObjectMeta(
             name=name,
             labels=TEST_LABEL,
-            namespace=namespace,
+            # namespace=namespace
         ),
         spec=PodSpec(
             containers=[
@@ -149,8 +149,10 @@ async def test_webhook_workload(ops_test: OpsTest, temp_pod_deleter):
 
     # Create a pod in the first namespace and ensure it comes up without any node affinity
     test_pod_name = "test-pod-no-affinity"
-    test_pod = create_test_pod_resource(name=test_pod_name, namespace=namespace_1_name)
-    test_pod_created = lightkube_client.create(test_pod, name=test_pod.metadata.name)
+    test_pod = create_test_pod_resource(name=test_pod_name)
+    test_pod_created = lightkube_client.create(
+        test_pod, name=test_pod.metadata.name, namespace=namespace_1_name
+    )
     assert test_pod_created.spec.affinity is None
 
     # Update config to add a node affinity to pods in the first namespace
@@ -165,19 +167,24 @@ async def test_webhook_workload(ops_test: OpsTest, temp_pod_deleter):
 
     # Create a pod in the first namespace and ensure it comes up with the node affinity
     test_pod_name = "test-pod-with-affinity"
-    test_pod = create_test_pod_resource(name=test_pod_name, namespace=namespace_1_name)
-    test_pod_created = lightkube_client.create(test_pod, name=test_pod.metadata.name)
+    test_pod = create_test_pod_resource(name=test_pod_name)
+    test_pod_created = lightkube_client.create(
+        test_pod, name=test_pod.metadata.name, namespace=namespace_1_name
+    )
     assert test_pod_created.spec.affinity is not None
 
     # Create a pod in the second namespace, which does NOT have the label required to enable
     # injection of node affinity and tolerations, and ensure that it comes up WITHOUT the
     # configured node affinity
     test_pod_name = "test-pod-without-affinity"
-    test_pod = create_test_pod_resource(name=test_pod_name, namespace=namespace_2_name)
-    test_pod_created = lightkube_client.create(test_pod, name=test_pod.metadata.name)
+    test_pod = create_test_pod_resource(name=test_pod_name)
+    test_pod_created = lightkube_client.create(
+        test_pod, name=test_pod.metadata.name, namespace=namespace_2_name
+    )
     assert test_pod_created.spec.affinity is None
 
 
+@pytest.mark.abort_on_fail
 async def test_charm_removal(ops_test: OpsTest):
     """Test that the  charm can be removed without errors and leaves no leftovers."""
     await ops_test.model.remove_application(APP_NAME, block_until_done=True)
