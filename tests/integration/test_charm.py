@@ -39,7 +39,7 @@ SETTINGS_YAML_TEMPLATE = """
           operator: In
           values:
           - the-testing-val2
-{namespace_2}:
+{namespace_2}: |
     nodeSelectorTerms:
       - matchExpressions:
         - key: the-testing-key
