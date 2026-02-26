@@ -75,7 +75,7 @@ jobs:
 
       - name: Run test
         run: |
-          tox -e integration -- --model testing
+          tox -vve integration -- --model testing
 
       - name: Get all
         run: kubectl get all -A
@@ -86,5 +86,5 @@ jobs:
         if: failure()
 
       - name: Get operator logs
-        run: kubectl logs --tail 100 -ntesting -ljuju-operator
+        run: kubectl logs --tail 100 -ntesting -lapp.kubernetes.io/name=namespace-node-affinity -c charm
         if: failure()

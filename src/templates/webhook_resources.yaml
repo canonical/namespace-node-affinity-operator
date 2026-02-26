@@ -1,3 +1,6 @@
+---
+# refer to the upstream MutatingWebhookConfiguration definition:
+# https://github.com/idgenchev/namespace-node-affinity/blob/cfcfe8ec25d5945e70b635b6b0f33532aa4c2fce/webhookconfig/webhookconfig.go#L39-L74
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
@@ -14,12 +17,9 @@ webhooks:
         namespace: {{ namespace }}
         path: "/mutate"
         port: 443
-    objectSelector:
-      matchExpressions:
-      - key: app
-        operator: NotIn
-        values:
-        - {{ app_name }}-pod-webhook
+    namespaceSelector:
+      matchLabels:
+        namespace-node-affinity: enabled
     rules:
       - operations: ["CREATE"]
         apiGroups: [""]

@@ -21,10 +21,25 @@ logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 APP_NAME = "namespace-node-affinity"
+DEFAULT_NAMESPACE_NAME = "default"
+NAMESPACE_LABELS_ENABLING_INJECTION = {"namespace-node-affinity": "enabled"}
+SETTINGS_CONFIG_OPTION_NAME = "settings_yaml"
 
 
 SETTINGS_YAML_TEMPLATE = """
-{namespace}: |
+{namespace_1}: |
+    nodeSelectorTerms:
+      - matchExpressions:
+        - key: the-testing-key
+          operator: In
+          values:
+          - the-testing-val1
+      - matchExpressions:
+        - key: the-testing-key2
+          operator: In
+          values:
+          - the-testing-val2
+{namespace_2}: |
     nodeSelectorTerms:
       - matchExpressions:
         - key: the-testing-key
@@ -114,44 +129,60 @@ async def set_application_config(ops_test: OpsTest, app_name: str, config: dict,
     )
 
 
+@pytest.mark.abort_on_fail
 async def test_webhook_workload(ops_test: OpsTest, temp_pod_deleter):
     """Test whether the webhook properly adds a node affinity to new pods."""
+    namespace_1_name = ops_test.model.name
+    namespace_2_name = DEFAULT_NAMESPACE_NAME
+
     lightkube_client = Client()
 
-    # Enable the namespace node affinity tool in this model's namespace
-    patch = {"metadata": {"labels": {"namespace-node-affinity": "enabled"}}}
-    lightkube_client.patch(Namespace, ops_test.model_name, patch)
+    # Enable the charm to operate on the first namespace
+    patch = {"metadata": {"labels": NAMESPACE_LABELS_ENABLING_INJECTION}}
+    lightkube_client.patch(Namespace, namespace_1_name, patch)
 
-    # Create a pod in this namespace and ensure it comes up without any node affinity
-    # Configure webhook to not apply to any namespaces
+    # Configure the charm's webhook to not apply injections to any namespaces
     await set_application_config(
         ops_test=ops_test,
         app_name=APP_NAME,
-        config={"settings_yaml": ""},
+        config={SETTINGS_CONFIG_OPTION_NAME: ""},
     )
+
+    # Create a pod in the first namespace and ensure it comes up without any node affinity
     test_pod_name = "test-pod-no-affinity"
     test_pod = create_test_pod_resource(name=test_pod_name)
-
     test_pod_created = lightkube_client.create(
-        test_pod, name=test_pod.metadata.name, namespace=ops_test.model.name
+        test_pod, name=test_pod.metadata.name, namespace=namespace_1_name
     )
     assert test_pod_created.spec.affinity is None
 
-    # Update config to add a node affinity to pods in this namespace
-    settings_yaml = SETTINGS_YAML_TEMPLATE.format(namespace=ops_test.model.name)
+    # Update config to add a node affinity to pods in the first namespace
+    settings_yaml = SETTINGS_YAML_TEMPLATE.format(
+        namespace_1=namespace_1_name, namespace_2=namespace_2_name
+    )
     await set_application_config(
         ops_test=ops_test,
         app_name=APP_NAME,
-        config={"settings_yaml": settings_yaml},
+        config={SETTINGS_CONFIG_OPTION_NAME: settings_yaml},
     )
 
-    # Create a pod in this namespace and ensure it comes up with the node affinity
+    # Create a pod in the first namespace and ensure it comes up with the node affinity
     test_pod_name = "test-pod-with-affinity"
     test_pod = create_test_pod_resource(name=test_pod_name)
     test_pod_created = lightkube_client.create(
-        test_pod, name=test_pod.metadata.name, namespace=ops_test.model.name
+        test_pod, name=test_pod.metadata.name, namespace=namespace_1_name
     )
     assert test_pod_created.spec.affinity is not None
+
+    # Create a pod in the second namespace, which does NOT have the label required to enable
+    # injection of node affinity and tolerations, and ensure that it comes up WITHOUT the
+    # configured node affinity
+    test_pod_name = "test-pod-without-affinity"
+    test_pod = create_test_pod_resource(name=test_pod_name)
+    test_pod_created = lightkube_client.create(
+        test_pod, name=test_pod.metadata.name, namespace=namespace_2_name
+    )
+    assert test_pod_created.spec.affinity is None
 
 
 async def test_charm_removal(ops_test: OpsTest):
