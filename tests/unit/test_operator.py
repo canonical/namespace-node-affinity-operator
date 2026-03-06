@@ -7,6 +7,11 @@ from base64 import b64encode
 
 import pytest
 import yaml
+from charmed_kubeflow_chisme.kubernetes import create_charm_default_labels
+from lightkube.resources.admissionregistration_v1 import MutatingWebhookConfiguration
+from lightkube.resources.apps_v1 import Deployment
+from lightkube.resources.core_v1 import ConfigMap, Secret, Service, ServiceAccount
+from lightkube.resources.rbac_authorization_v1 import Role, RoleBinding
 from ops.model import WaitingStatus
 from ops.testing import Harness
 
@@ -101,6 +106,21 @@ class TestCharm:
             template_files=k8s_resource_files,
             context=context,
             logger=logger,
+            labels=create_charm_default_labels(
+                harness.model.app.name,
+                harness.model.name,
+                scope="auths-deploy-configmaps-sa-secrets-svc-webhooks",
+            ),
+            resource_types={
+                MutatingWebhookConfiguration,
+                Deployment,
+                Role,
+                RoleBinding,
+                Service,
+                ServiceAccount,
+                Secret,
+                ConfigMap,
+            },
         )
         mocked_load_in_cluster_generic_resources.assert_called_once_with("lightkube_client")
 
